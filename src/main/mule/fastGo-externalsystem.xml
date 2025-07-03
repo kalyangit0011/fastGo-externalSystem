@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="global-elementsFlow" doc:id="bb5c8618-c799-4db3-b06b-3e3518102660" >
+		<http:listener doc:name="Listener" doc:id="b4767f1a-7a47-40f1-90ea-76d7c050b210" config-ref="HTTP_Listener_config" path="/fastGo/{service}">
+			<http:error-response statusCode="#[vars.statusCode]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="01ce24f6-9310-4182-bc0e-d448befa147b" message="main-flow-start"/>
+		<ee:transform doc:name="Transform Message" doc:id="1badaaf9-f20d-4d28-86a1-824dc6d50f6e" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="serviceType" ><![CDATA[attributes.uriParams.service]]></ee:set-variable>
+				<ee:set-variable variableName="transactionId" ><![CDATA[attributes.headers.transactionId]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<db:select doc:name="Select" doc:id="6656f4f3-5881-44b2-97a9-918fd691d7e4" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM fastgo_schedules]]></db:sql>
+		</db:select>
+		<!-- [STUDIO:"Choice"]<choice doc:name="Choice" doc:id="fbe21f9a-588f-4680-893d-f7e44cdcf425" >
+			<when expression='#[vars.serviceType == "routes"&#93;'>
+				<logger level="INFO" doc:name="Logger" doc:id="5eb78b20-c848-4ffe-908d-992129d1b328" message="choice-routes-flow-start"/>
+				<flow-ref doc:name="Flow Reference" doc:id="6f1c8abf-93c2-4e11-9b4d-fd496f835089" name="routesFlow"/>
+				<logger level="INFO" doc:name="Logger" doc:id="5eb1a55d-dbab-414a-be88-5cd9e38a7f54" message="choice-routes-flow-end"/>
+			</when>
+			<when expression='#[vars.serviceType == "schedules"&#93;'>
+				<logger level="INFO" doc:name="Logger" doc:id="a03ad78f-1dcb-432e-a30b-ba163c4464a5" message="choice-schedules-flow-start"/>
+				<flow-ref doc:name="Flow Reference" doc:id="613632b6-38ba-4c48-b94a-a6f80f97ec75" name="schedulesFlow"/>
+				<logger level="INFO" doc:name="Logger" doc:id="217d4afe-cb77-4007-b603-338db4e51111" message="choice-schedules-flow-end"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="fecee3e1-8f47-401c-8516-44446e24f15f" message="choice-default-flow"/>
+			</otherwise>
+		</choice> [STUDIO] -->
+		<ee:transform doc:name="Transform Message" doc:id="1e7876be-9186-4302-882b-f94b2fa81ba0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="2fe03957-591e-4045-8039-6bd48fe3df8b" message="main-flow-end"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="177870c3-d49f-42c4-918c-17994bb7c108" type="ANY">
+				<logger level="INFO" doc:name="Logger" doc:id="81aab820-db10-4ac9-b0b0-8c7f435a5924" message="DB:CONNECTIVITY error" />
+				<ee:transform doc:name="Transform Message" doc:id="a976d396-414d-47dd-949b-cdce98247912" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": error.description,
+	"errorType": error.errorType,
+	"time": now()
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="statusCode" ><![CDATA[500]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
