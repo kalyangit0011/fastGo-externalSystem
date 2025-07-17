@@ -21,16 +21,16 @@ http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/cu
 				<ee:set-variable variableName="transactionId" ><![CDATA[attributes.headers.transactionId]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<db:select doc:name="Select" doc:id="6656f4f3-5881-44b2-97a9-918fd691d7e4" config-ref="Database_Config">
-			<db:sql ><![CDATA[SELECT * FROM fastgo_schedules]]></db:sql>
-		</db:select>
-		<!-- [STUDIO:"Choice"]<choice doc:name="Choice" doc:id="fbe21f9a-588f-4680-893d-f7e44cdcf425" >
-			<when expression='#[vars.serviceType == "routes"&#93;'>
+		<!-- [STUDIO:"Select"]<db:select doc:name="Select" doc:id="6656f4f3-5881-44b2-97a9-918fd691d7e4" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM fastgo_routes&#93;&#93;></db:sql>
+		</db:select> [STUDIO] -->
+		<choice doc:name="Choice" doc:id="fbe21f9a-588f-4680-893d-f7e44cdcf425" >
+			<when expression='#[vars.serviceType == "routes"]'>
 				<logger level="INFO" doc:name="Logger" doc:id="5eb78b20-c848-4ffe-908d-992129d1b328" message="choice-routes-flow-start"/>
 				<flow-ref doc:name="Flow Reference" doc:id="6f1c8abf-93c2-4e11-9b4d-fd496f835089" name="routesFlow"/>
 				<logger level="INFO" doc:name="Logger" doc:id="5eb1a55d-dbab-414a-be88-5cd9e38a7f54" message="choice-routes-flow-end"/>
 			</when>
-			<when expression='#[vars.serviceType == "schedules"&#93;'>
+			<when expression='#[vars.serviceType == "schedules"]'>
 				<logger level="INFO" doc:name="Logger" doc:id="a03ad78f-1dcb-432e-a30b-ba163c4464a5" message="choice-schedules-flow-start"/>
 				<flow-ref doc:name="Flow Reference" doc:id="613632b6-38ba-4c48-b94a-a6f80f97ec75" name="schedulesFlow"/>
 				<logger level="INFO" doc:name="Logger" doc:id="217d4afe-cb77-4007-b603-338db4e51111" message="choice-schedules-flow-end"/>
@@ -38,7 +38,7 @@ http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/cu
 			<otherwise >
 				<logger level="INFO" doc:name="Logger" doc:id="fecee3e1-8f47-401c-8516-44446e24f15f" message="choice-default-flow"/>
 			</otherwise>
-		</choice> [STUDIO] -->
+		</choice>
 		<ee:transform doc:name="Transform Message" doc:id="1e7876be-9186-4302-882b-f94b2fa81ba0" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
